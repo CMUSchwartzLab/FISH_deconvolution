@@ -8,6 +8,9 @@ Code and more information can be found in the subdirectory
 MIMO/MIMOsolver including a longer documentation file called
 [MIMO/MIMOsolver/README.md](MIMO/MIMOsolver/README.md).
 
+![](workflow.png)
+*The work flow of the model*: we simulated ground truth from real Single-cell sequencing (SCS) data and deconvolve the bulk tumor with the simulated information to accurately infer the tumor heterogeneity, for more details, please refer to the paper.
+
 Reference:
 
 Haoyun Lei, E. Michael Gertz, Alejandro A. Schaffer, Heselmeyer-Haddad, Irianna Torres, 
