@@ -400,10 +400,10 @@ def saveData(obj, filename, i):
         'referFISHploidy': obj.referFISHploidy, #ploidy for the reference FISH cell
         'ProbeIndex': obj.FISHposition,   # FISH probes's corresponding indexes in SCS
         #'ProbeName': np.asanyarray(ind_values,dtype=str) #FISH probes
-        'EnrichReferFISH': obj.enrichReferFISH,   #expand FISH mat for reference      
-        'correlatePositions': obj.link,    #
+        #'EnrichReferFISH': obj.enrichReferFISH,   #expand FISH mat for reference      
+        #'correlatePositions': obj.link,    #
         'uFISHRefer': np.dot(obj.NoiseFISH, np.diag(obj.referFISHploidy)) / 2, 
-        'uEnrichReferFISH': np.dot(obj.enrichReferFISH, np.diag(obj.referFISHploidy)) / 2
+        #'uEnrichReferFISH': np.dot(obj.enrichReferFISH, np.diag(obj.referFISHploidy)) / 2
 
 
     }
@@ -438,8 +438,8 @@ def simulateInstance(output_dir, scsData, cellNum, tumorNum, alpha, divider, fis
     s.simulateCell(noise)
     s.simulateReferFISH()
     s.addNOiseFISH(noise)
-    s.corr_feature()
-    s.enrichReferFISHMat(noise)
+    #s.corr_feature()
+    #s.enrichReferFISHMat(noise)
     s.simulateBulk()
     saveData(s, output_dir, i)
 
@@ -461,9 +461,9 @@ def main():
 
     alpha = [100, 1, 0.1]
     if args.tumorName == 'GBM07':
-        divider = [57, 132]
+        divider = [57, 127]
     elif args.tumorName == 'GBM33':
-        divider = [59, 135]
+        divider = [57, 131]
     else:
         exit("Please choose GBM07 or GBM33")
         

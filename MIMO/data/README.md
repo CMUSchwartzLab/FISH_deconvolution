@@ -1,10 +1,7 @@
 # Data simulation directory
 
-For each of the two tumors GBM07 and GBM33, this directory contains
-- three input files (in csv format) for Simulate_SCS.py
-- one sample output file (in csv format) from Simulate_SCS.py
 
-The input files are based on the read Single-Cell Sequencing (SCS)
+There there files (in csv format) are based on the read Single-Cell Sequencing (SCS)
 data. GBM07RegionDivide.csv.
 Their meanings are as follows:
 
@@ -18,9 +15,12 @@ Their meanings are as follows:
 - GBM07PositionRate.csv and GBM33PositionRate.csv show the
   probabilities that each position has a copy number other than 2.
 
-The output files contain the **Simulated** SCS data based on the summary probability distributions of the real SCS
-data, so they have the prefix *simulated_* at the beginning of the
-file name.
+We provided the final **Simulated** SCS data based on the summary probability distributions of the real SCS
+data, so they have the prefix *simulated_* at the beginning of the file name.
 
-Much more information can be found in
-[../LLSolver/README.md](../LLSolver/README.md)
+Much more information can be found in our previous work [here](https://github.com/leovam/SCS_deconvolution/tree/master/schwartzlab/data) and [here](https://github.com/leovam/SCS_deconvolution/tree/master/schwartzlab/LLSolver)
+
+
+We also provide the infomration about the interval and FISH:
+- interval.pkl: a file contain three dataframes that indicate the chromosome, begin position and end position of each genomic location in SCS data, as well as such information for FISH probes
+- probe_position.txt: a raw file store the position information for FISH data

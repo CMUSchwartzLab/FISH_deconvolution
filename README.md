@@ -15,5 +15,5 @@ Reference:
 
 Haoyun Lei, E. Michael Gertz, Alejandro A. Schaffer, Heselmeyer-Haddad, Irianna Torres, 
 Xulian Shi, Kui Wu, Guibo Li, Liqin Xu, Yong Hou, Michael Dean, Thomas Ried
-Russell Schwartz, _Tumor heterogeneity assessed by bulk sequencing and fluorescence 
+Russell Schwartz, _Tumor heterogeneity assessed by sequencing and fluorescence 
 in situ hybridization (FISH) data_, in preparation.

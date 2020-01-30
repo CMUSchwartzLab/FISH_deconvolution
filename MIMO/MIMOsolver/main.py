@@ -92,11 +92,12 @@ def run_one_sample(sample, prob_id, intervals, args):
     clone_freq = simulation.reference_frequencies
     true_cells, true_freqs = simulation.true_cells, simulation.true_frequencies
     true_ploidy = simulation.true_cells_ploidy
-    expandReferFISH = simulation.expand_uFISH
+    expandReferFISH = simulation.sim_uFISH  #we do not use expand FISH here for now 
     referFISHploidy = simulation.reference_fish_ploidy
     
     pr = np.diag(referFISHploidy)
-    corPositons = [item for sublist in simulation.correlate_pos for item in sublist] 
+    #corPositons = [item for sublist in simulation.correlate_pos for item in sublist] 
+    corPositons = simulation.probe_pos
     '''only get proportion of genomic for reference'''
     mask = np.random.choice(range(bulk_data.shape[1]), int(bulk_data.shape[1]*args.mask), replace=False)
     '''select reference cell'''
@@ -122,11 +123,11 @@ def run_one_sample(sample, prob_id, intervals, args):
     step = 1
     start_time = time.time()
     if args.solver == 'gurobi':
-        import ILP_solver_v7 as gs
-    elif args.solver == 'scip':
-        import ILP_solver_SCIP as gs
+        import MIMOsolver as gs
+    # elif args.solver == 'scip':
+    #     import ILP_solver_SCIP as gs
     else:
-        exit("Only Gurobi and SCIP available")
+        exit("Only Gurobi available")
 
     while True:
         F, objVal1 = gs.updateProportion(bulk_data, ctotal, pr, clone_freq, args.alphaf, k, root=2*k)
@@ -149,7 +150,7 @@ def run_one_sample(sample, prob_id, intervals, args):
         #oldObj[2] = objVal3
         oldObj[1] = objVal2
         oldObj[0] = objVal1
-        if (change < thresholdI or step > 100):
+        if (change < thresholdI or step > 10):
             break
 
     print('Finished in', step, 'iterations.')

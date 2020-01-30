@@ -262,6 +262,11 @@ class Simulation:
         return self.data["EnrichReferFISH"].T
 
     @property
+    def sim_uFISH(self):
+        """ploidy for FISH"""
+        return self.data["uFISHRefer"].T
+
+    @property
     def correlate_pos(self):
         """get the correlated position for each probes"""
         return self.data.get("correlatePositions")
@@ -271,6 +276,10 @@ class Simulation:
             """ploidy for FISH"""
             return self.data["uEnrichReferFISH"].T
 
+    @property
+    def probe_pos(self):
+        """get the correlated position for each probes"""
+        return self.data.get("ProbeIndex")
 
 class MarkerPositions:
     """Positions of the FISH and copy number markers"""
@@ -343,3 +352,8 @@ class Real:
     def correlate_pos(self):
         """get the correlated position for each probes"""
         return self.data.get("correlatePositions")
+    
+    @property
+    def sim_uFISH(self):
+        """ploidy for FISH"""
+        return self.data["uFISHRefer"].T
