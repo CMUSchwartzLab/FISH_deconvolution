@@ -6,50 +6,47 @@ https://github.com/CMUSchwartzLab/FISH_deconvolution
 
 that contains a software (**M**ultiple **I**nference with **m**iFISH **O**ptimizer (MIMO)) to solve several formulations of the problem of deconvolving bulk tumor data with assistance of single-cell sequencing and FISH data into subpopulations, as described in (Lei et al., in preparation).  Much of the documentation below assumes thatthe user has at least skimmed the manuscript and is familiar with the terminology therein.
 
-In short, this repository contains implementations of the
-"phylogeny-free' and "phylogeny-based" described in the manuscript,
+In short, this repository contains implementations of an extended model improved based on our pervious work. The exteneded model uses the information from FISH data, which are described in the manuscript,
 and simulated data that may be used to test these problems.  It also
 contains scripts that _could_ be used to produce the semi-simulated
 data and figures in the paper.  These scripts are provided as
 documentation of what was done, but the semi-simulated data is based
 on human subjects data, which cannot be redistributed.  Thus, most
 users will probably want to try the deconvolution algorithms on
-fully-simulated data.
+fully-simulated data, which we describe in [../data/README.md](../data/README.md)
 
 The main programs that a user may want to try are:
 
-* **SimulateSCS.py** [simulate single-cell data resembling the observed
-    data]
-
-* **DataSimulation.py** [simulate many replicates of the hypothetical
+* **simulation.py** [simulate many replicates of the hypothetical
     bulk data from the output of SimulateSCS.py or from the observed
     single-cell data]
 
-* **DecomposeSolver.py**  [solve the deconvolution problem]
+* **MIMOSolver.py**  [solve the deconvolution problem for each case]
+  
+* **main.py** [run **MIMOSolver.py** to solve deconvolution problem in desired steps or to convergence ]
 
-The DecomposeSolver.py script will typically be the best place to
-start.
+The main.py script will typically be the best place to start.
 
-Programs were written initially by Haoyun Lei and Bochuan Lyu. 
+Programs were written initially by Haoyun Lei 
 Programs were modified by Haoyun Lei and E. Michael Gertz. 
-Programs were testedby E. Michael Gertz, Haoyun Lei, Bochuan Lyu, and Alejandro Schaffer.
+Programs were testedby Haoyun Lei, E. Michael Gertz., and Alejandro Schaffer.
 
 ----------
 # Installation
 
 Users should clone the git repository, possibly by typing,
 ```
-git clone https://github.com/CMUSchwartzLab/SCS_deconvolution.git
+git clone https://github.com/CMUSchwartzLab/FISH_deconvolution.git
 ```
 Instructions in this README assume a GNU Linux command line or a
 Macintosh terminal.  The `git` command above will create a
-subdirectory named `SCS_deconvolution`.  The instructions assume that 
+subdirectory named `FISH_deconvolution`.  The instructions assume that 
 the user's current directory is
-`SCS_deconvolution/schwartzlab/LLSolver`, in other words the directory that
+`FISH_deconvolution/MIMO/MIMOsolver`, in other words the directory that
 contains the `README.md` that you are currently reading.
 
 The setup assumes that the user will create another subdirectory
-`SCS_deconvolution/schwartzlab/simulation`.  It is inherent to the
+`FISH_deconvolution/MIMO/simulation`.  It is inherent to the
 code and documentation that the four subdirectories {LLSolver, data,
 test, simulation} are parallel, at the same level.  For scripts that
 require a path, the user should always specify an absolute path (a
@@ -66,109 +63,55 @@ but all analyses in the manuscript that used an optimization package
 were done with Gurobi.  Several programs assume the availability of
 the python3 numpy and scipy packages.
 
-----------------------
-
-## SimulateSCS.py
-
-The purpose of SimulateSCS.py is to simulate realistic single-cell
-data that is similar to the observed single-cell data.  The program
-SimulateSCS.py is needed because the observed data are human subjects
-data, which cannot be redistributed.  If the user has real observed single-cell data,
-this simulation step is not necessary. SimulateSCS.py uses summary
-statistics from the observed data, which can be found in subdirectory
-schwartzlab/data.
-
-SimulateSCS.py takes four arguments:
-1. The full path to the data directory
-2. The tumor name, which is GBM07 or GBM33
-
-3. The integer mean of the Poisson distribution used in the
-simulation (denoted by lam, short for lambda, in the code)
-
-4. The depth of the binary tree of single cells that defines the clone
-structure
-
-Example outputs are shown in
-* schwartzlab/data/simulated_GBM07_integer_CNV.csv
-* schwartzlab/data/simulated_GBM33_integer_CNV.csv
-
-and these were obtained via the calls
-* `python SimulateSCS.py 'PATH/TO/Cell/Information' GBM07 115 6`
-* `python SimulateSCS.py 'PATH/TO/Cell/Information' GBM33 45 6`
-
-The lam (3rd argument values) of 115 and 45 are recommended for GBM07
-and GBM33 respectively.
-
-If the user wishes to change the seed for the random number generator,
-then it is necessary to modify SimulateSCS.py and make an assignment
-to variable seed at the top of the program.
 
 ---------------------
-## DataSimulation.py 
+## simulation.py 
   
-This program simulates bulk tumor data with desired number of samples
-from the single cell sequencing data Simulation is based on the
-Geometric Model described in the manuscript and uses a Dirichlet
+This program simulates bulk tumor data with desired number of samples from the single cell sequencing data and gather the information from single cell sequencing data to simulate FISH, then we collect useful simulated information as reference for copy numbers, fractions and ploidies.
+
+Simulation is based on the Geometric Model described in the manuscript and uses a Dirichlet
 distribution.  As written, this method requires access to the single
 cell data described in the manuscript, which is human subjects data
 and cannot be redistributed.  The method is included in this distribution
 as supplemental documentation to the manuscript.
 
-The arguments to DataSimulation.py are as follows:
+The arguments to simulation.py are as follows:
 
-1.  ParentDirectory: specify a directory that contains the LLSolver folder
-
-2.  DateFolder: allows for different simulations run on different
+1.  date: allows for different simulations run on different
 dates to be stored n different subdirectories (a.k.a. folders)
 
-3.  TumorName: pick a tumor from which you choose the single cell
+2.  tumorName: pick a tumor from which you choose the single cell
 data; the name of the input files should be
 ../data/<TumorName>_integer_CNV.csv. 
-This is also the name of directory to store the results of this tumor (see the descprition in **DecomposeSolver.py** below)
+This is also the name of directory to store the results of this tumor (see the descprition in **main.py** below)
+
+3.  cellNums: choose how many cell clones you want to retrieve from the SCS data, we use 6 in our test
+
 
 4.  tumor_number: choose how many tumor samples you want to simulate,
-in the main experiments in the manuscript, we chose 3, 6, or 9 samples
+in the main experiments in the manuscript, we chose 3 samples in our test
 
-5.  alpha: the alpha parameter for the Dirichlet distribution,
-describe in the manuscript
+5.  simuNums: how many different case you want to create, we usually created 10 different simulated case
 
-6.  N: the number of simulated replicates (the manuscript uses N=40)
+6.  cellNoise: the noise level you want to add into the copy number, we add 10% (0.1) for the robust test in our paper
 
-7.  Cap: True of False, whether or not to cap the copy numbers larger
-than 10 at 10 (this was set to True for all runs in the manuscript and
-must be set to True for the example data provided)
+7.  ploidy: 2 or random, if you choose 2, then all the cell clones will be assigned ploidy of 2, if you choose random, the cell clones would assigned ploidy from [0, 1, 2, ..., 8] according to some distribution described in the paper.
 
-Example calls to DataSimulation.py can be found in the scripts
+Example calls to simulation.py can be found in the scripts
 
-* schwartzlab/test/runDataSimulationGBM07.sh
-* schwartzlab/test/runDataSimulationGBM33.sh
+* MIMO/tests/simulate_command.sh 1_30_1 GBM07 6 3 10 0 2
+* MIMO/tests/simulate_command.sh 1_30_1 GBM33 6 3 10 0 2
 
-but those are for the observed data.
+We also provided a command line to run the command above in [../tests/run_simulate_command.sh](../tests/run_simulate_command.sh)
 
-If one wants to use the simulated data,
-`simulated_GBM07_integer_CNV.csv` or `simulated_GBM07_integer_CNV.csv`,
-then the third argument, TumorName, should be specified as
 
-> simulated_GBM07
-
-or
-
-> simulated_GBM33
-
-respectively.
-
-To reuse the scripts runDataSimulationGBM07.sh and
-runDataSimulationGBM33.sh, the user must also replace the example full
-paths give, with other full paths that are suitable for the user's
-installation of this repository.
-
-After running DataSimulation.py the folder/subdirectory structure
+After running simulation.py the folder/subdirectory structure
 should be abstractly as follows:
 ```
 /some/path/to/the/ParentDirectory:
                                   /data
-                                  /LLSolver/DataSimulation.py
-                                           /DecomposeSolver.py
+                                  /MIMOsolver/simulation.py
+                                           /MIMOSolver.py
                                            /....
                                            
                                   /simulation/DateFolder/GBM07/3/simulateData1
@@ -176,26 +119,14 @@ should be abstractly as follows:
                                                                 ...
                                                                 /simulateDataN
                                                                 
-                                  /test/GTest/<TestCase1>.sh
-                                             /<TestCase2>.sh
-                                             ...
-                                             /<TestCaseN>.sh
-                                       /NTest/<TestCase1>.sh
-                                             /<TestCase2>.sh
-                                             ...
-                                             /<TestCaseN>.sh
+                                  /tests/<CommandLine1>.sh
+                                        /<CommandLine2>.sh
+                                        ...
+                                        /<CommandLineN>.sh
+                                       
 ```
 
-Here, GBM07 is the tumor name selected and could be GBM33
-instead). If the user used *simulated SCS* data and specified TumorName 
-as *simuluated_GBM07* when calling DataSimulation.py, the directory name would be simuluated_GBM07.
-Here, 3 is number of samples.  GTest refers to the
-phylogeny-based method, which uses the Gurobi (hence the G) python
-library, while Ntest refers to the phylogeny-free method, which is
-also called non-negative matrix factorization (NMF, hence the N).
-
-`<TestCase1>.sh` through `<TestCaseN>.sh` are abstract names for the
-shell scripts that call DecomposeSolver.py.
+`<CommandLine>.sh` through `<CommandLine>.sh` are abstract names for the shell scripts that call different py file in **MIMOsolver** directory
 
 -------------------
 ## DecomposeSolver.py
