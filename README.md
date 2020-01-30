@@ -2,7 +2,7 @@ This is the top level directory for the repository
 
 https://github.com/CMUSchwartzLab/SCS_FISH
 
-that contains a software **M**ultiple **I**nference with **m**iFISH **O**ptimizer (MIMO) to solve several formulations of the problem of deconvolving bulk tumor data with assistance of single-cell sequencing and FISH data into subpopulations, as described in (Lei et al., in preparation)
+that contains a software (**M**ultiple **I**nference with **m**iFISH **O**ptimizer (MIMO)) to solve several formulations of the problem of deconvolving bulk tumor data with assistance of single-cell sequencing and FISH data into subpopulations, as described in (Lei et al., in preparation)
 
 Code and more information can be found in the subdirectory 
 MIMO/MIMOsolver including a longer documentation file called
