@@ -21,7 +21,7 @@ The main programs that a user may want to try are:
     bulk data from the output of SimulateSCS.py or from the observed
     single-cell data]
 
-* **MIMOSolver.py**  [solve the deconvolution problem for each case]
+* **MIMOsolver.py**  [solve the deconvolution problem for each case]
   
 * **main.py** [run **MIMOSolver.py** to solve deconvolution problem in desired steps or to convergence ]
 
@@ -35,7 +35,7 @@ Programs were testedby Haoyun Lei, E. Michael Gertz., and Alejandro Schaffer.
 # Installation
 
 Users should clone the git repository, possibly by typing,
-```
+```bash
 git clone https://github.com/CMUSchwartzLab/FISH_deconvolution.git
 ```
 Instructions in this README assume a GNU Linux command line or a
@@ -126,120 +126,104 @@ should be abstractly as follows:
                                        
 ```
 
-`<CommandLine>.sh` through `<CommandLine>.sh` are abstract names for the shell scripts that call different py file in **MIMOsolver** directory
+`<CommandLine>.sh` through `<CommandLine>.sh` are abstract names for the shell scripts that call different .py file in **MIMOsolver** directory
 
 -------------------
-## DecomposeSolver.py
+## MIMOsolver.py
+
+This is the core program that solve one problem by applying coordinate descent algorithm. In general we are optimizing: 
+
+![](of.png)
+
+which is non-convex, we solve **F**, **S**, **C**，**P** iteratively to reach an opimization:
+* **updateProportion**: step to optimize F while fixing **S**, **C**, **P**
+* **updateTree**: step to optimize S while fix **F**, **C**, **P**
+* **updateCopyNum**: step to optimize C while fixing **F**, **S**, **P**
+* **updatePloidy**: step to optimize P while fixing **F**, **S**, **C**
+
+Each step contain different constraints, for more information, please refer to the methods section in paper and supplementary material.
+
+-------------------
+## main.py
 
 This is the main program that decomposes the bulk tumor data to
-resolve the copy number in 9934 loci in each fundamental cell type.
-The code will retrieve the simulation data if you set up the input
-arguments correctly (see below)
+resolve the copy number in 9934 loci in each fundamental cell type and infer the corresponding fraction and ploidy. 
+The code will retrieve the simulation data and implement different reference information if you set up the input arguments correctly (see below)
 
-DecomposeSolver.py will use one of three methods, chosen by the user,
-to solve the tumor decomposition problem.  The code for these methods
+main.py will use [Gurobi](https://www.gurobi.com/) (we are soon to provide SCIP solver available) to solve the tumor decomposition problem. The detailed code for these methods
 are in
 
-  * NMF_solver.py
-  * GurobiILP_solver.py
-  * SCIP_solver.py
+  * MIMOsolver.py
+
 
 though the user should not invoke these files directly.
-`NMF_solver.py` solves the deconvolution optimization problem in the
-phylogeny-free method, while `GurobiILP_solver` and `SCIP_solver`
-solve the optimization problem in the phylogeny-based method.
+`MIMOsolver` solves the Mixed Integer Linear Programming problem in a coordinate descent manner.
 
 The code will solve all the problems from `simulateData1` to
-`simulateDataN` in each subfolder of tumor samples when you specify the number of tumor
-samples, e.g. if the number of tumor samples is 3, it will solve all
-the simulateData saved in the folder and save the results for each of
-the simulateData
+`simulateDataN` in each subfolder of tumor samples when you specify the name of tumor samples, e.g. if the name of tumor samples is GBM07, it will solve all the simulateData saved in the folder and save the results for each of the simulateData
 
-  * ParentDirectory: specify a directory that contains the LLSolver folder
 
-  * DateFolder: you may do different simulation at different time,
-    this is just for you to record different date, consistent with the
-    one you set up with DataSimulation.py
+  * **simulateDateFolder**: you may do different simulation at different time, this is just for you to specify which simulated data from **simulation** directory you are running the model on
 
-  * TumorName: pick a tumor from which you choose the single cell
-    data, now the available single cell data are from GBM07 or GBM33. 
-    If you are using *simulated SCS* data in Bulk Data Simualtion step, 
-    you should specify this argurment as simulated_GBM07 or simulated_GBM33 
-    to be consistent with the previous step. This argument is also used as directory
-    name in the resutls directory (see below)
+  * **outputDateFolder**: this specifies the directory you want to save the results.  It may or may not the same as the simulateDataFolder since you would run the model on the same simulated data at different time. This results would be saved into subdirectory in **results** directory.
 
-  * TumorNumber: specify a tumor sample number so it can get data from
-    that subfolder of the simulation folder
+  * **alpha_f**: the regularization value for ||F-F'||, if 0.0 is set, no F penalty will be applied, we choose 0.2 if we want this regularization to be effective.
 
-  * reg1: regularization parameter of the penalty in NMF, will be
-    effective only if the solver is NMF
+  * **alpha_1**: the regularization value for J(S,C,C'), if 0.0 is set, no phylogeny penalty will be applied, we choose 0.2 if we want this regularization to be effective.
+  
+  * **alpha_2**: the regularization value for ||X^TCP-H||, if 0.0 is set, no ploidy penalty will be applied, we choose 0.2 if we want this regularization to be effective.
+  * **offset**: index of the data to start from. 
+  * **limit**: number of data to run, starting from data[offset]
+  * **mask**: percentage of genomic interval to be chosen, we use all avaiable genomic loci for now (mask=1)
 
-  * alpha: regularization parameter of the penalty in ILP, will
-    be effective only if the solver is gurobi
-  * beta: regularization parameter of the penalty in ILP, will
-    be effective only if the solver is SCIP, since the verion using SCIP 
-    is not yet available now, we always put 0.0
-  * solver: choose nmf or gurobi  (here in lower case)
-    to solve the problem, SCIP will be available later.
+Please note that **offset** and **limit** provide a convenient way to slice the whole simulated dataset, so it would possible to run the model the in parallel with different slicing choices.
+
 
 The folder structure will be as following:
 ```
   /some/path/to/the/ParentDirectory:
-                                  /data/single cell sequencing data
-                                  /LLSolver/DataSimulation.py
-                                           /DecomposeSolver.py
+                                  /data/
+                                  /MIMOsolver/simulation.py
+                                           /MIMOsolver.py
                                            /....
 
                                   /simulation/DateFolder/GBM07/3/<simulateData1>.mat
-                                                                /<simulateData2>.mat
+                                                                /<simulateData2>.pkl
                                                                 ...
-                                                                /<simulateDataN>.mat
+                                                                /<simulateDataN>.pkl
 
-                                  /test/GTest/<TestCase1>.sh
-                                             /<TestCase2>.sh
-                                             ...
-                                             /<TestCaseN>.sh
-                                       /NTest/<TestCase1>.sh
-                                             /<TestCase2>.sh
-                                             ...
-                                             /<TestCaseN>.sh
+                                  /tests/<CommandLine1>.sh
+                                        /<CommandLine2>.sh
+                                        ...
+                                        /<CommandLineN>.sh
+                                       
 
-                                  /results/DataFolder/GBM07/3/nmf/result_for_simulateData1
-                                                                 /result_for_simulateData2
+                                  /results/DataFolder/raw_result_for_simulateData1
+                                                     /statistic_result_for_simulateData1
                                                                  ...
-                                                                 /result_for_simulateDataN
+                                                     /raw_result_for_simulateDataN
+                                                     /statistic_result_for_simulateDataN
 
-                                                             /gurobi/result_for_simulateData1
-                                                                    /result_for_simulateData2
-                                                                    ...
-                                                                    /result_for_simulateDataN
+
 ```
 
 
 --------------
 In the git repository, the directories
-* schwartzlab/test/GTest
-* schwartzlab/test/NTest
+* schwartzlab/tests
 
-each contain one example of what `<TestCase1>.sh` could look like.
-Briefly, a call to `DecomposeSolver.py` should look something like
+we wrap all the argument of calling `main.py` in a .sh file [../tests/MIMOsolver_command.sh](../tests/MIMOsolver_command.sh) and then call that .sh file to call `main.py`. We also provide one example [../tests/run_MIMOsolver_command.sh](../tests/run_MIMOsolver_command.sh) of what command could look like.
+Briefly, a call to `main.py` should look something like
+```bash
+bash MIMOsolver_command.sh 1_30_1 1_30_1 0.2 0.2 0.2 0 10 gurobi 1
 ```
-python DecomposeSolver.py '/home/some_user/SCS_decomposition/schwartzlab/' 9_28 GBM07 3 0.2 0.0 gurobi 0.0
-```
 
-where `/home/some_user/SCS_decomposition/schwartzlab/` would be
-replaced with an appropriate path on the user's file system.
-
-Again, the `GBM07` directory under the `simulation` and `results` directory would be `simulated_GBM07` 
-if the user specifed the TumorName as `simulated_GBM07`. Also, if the user once specified TumorName 
-as `simulated_GBM07` when calling DataSimulation.py, the tumor name simulated_GBM07 should also be used 
-to call DecomposeSolver.py so that the program can have right path for input and output. However, this 
-rule does not apply to call SimulateSCS.py since the input for the program are based on real observed SCS data.
+Please note that the structure of **results** is incomplete yet that does not ditinguish GBM07 or GBM33 since we are working on GBM07 for now, so we assume the model are running only on GBM07 simulated data. Later updates to change the output directory are needed.
 
 
 Reference:
 
-Haoyun Lei, Bochuan Lyu, E. Michael Gertz, Alejandro A. Schaffer,
-Xulian Shi, Kui Wu, Guibo Li, Liqin Xu, Yong Hou, Michael Dean,
-Russell Schwartz, _Tumor Copy Number Deconvolution Integrating Bulk
-and Single-Cell Sequencing Data_, in preparation.
+Haoyun Lei, E. Michael Gertz, Alejandro A. Schaffer, Heselmeyer-Haddad, Irianna Torres, 
+Xulian Shi, Kui Wu, Guibo Li, Liqin Xu, Yong Hou, Michael Dean, Thomas Ried
+Russell Schwartz, _Tumor heterogeneity assessed by sequencing and fluorescence 
+in situ hybridization (FISH) data_, in preparation.
